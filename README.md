@@ -47,7 +47,7 @@ Ingestion → Enrichment → Valuation → Application
 ```
 
 Each layer is designed to evolve independently — see
-[`docs/PROJECT_BRIEF.md`](docs/PROJECT_BRIEF.md) for the full rationale
+[`docs/PROJECT-BRIEF.md`](docs/PROJECT-BRIEF.md) for the full rationale
 behind this split, the complete feature list, data source classification,
 and the reasoning behind the valuation model design.
 
