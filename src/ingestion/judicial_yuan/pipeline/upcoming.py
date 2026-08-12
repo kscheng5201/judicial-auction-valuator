@@ -4,25 +4,37 @@ Fetches detail pages and PDFs for every listing.
 """
 import logging
 
-from .. import config
+from .. import config, notify
 from ..crawler.session import JudicialSession
 from ..crawler.query import fetch_all_pages, upcoming_date_range
 from ..crawler.detail import fetch_detail
 from ..crawler.pdf import fetch_and_store_pdf
 from .upsert import (
     map_record, upsert_auction, upsert_detail,
-    log_run_start, log_run_finish,
+    log_run_start, log_run_finish, get_last_success_finish,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def run_upcoming():
-    date_from, date_to = upcoming_date_range()
-    logger.info("Upcoming pipeline: %s → %s", date_from, date_to)
+    since = get_last_success_finish("upcoming")
+    date_from, date_to = upcoming_date_range(since=since)
+    logger.info("Upcoming pipeline: %s → %s (last success: %s)",
+                date_from, date_to, since)
 
     session = JudicialSession()
-    session.refresh_csrf()
+    try:
+        session.refresh_csrf()
+    except Exception as exc:
+        logger.exception("Upcoming pipeline aborted: could not establish session")
+        run_id = log_run_start("upcoming", None, None, None, date_from, date_to)
+        log_run_finish(run_id, 0, 0, 0, status="error", error=str(exc))
+        notify.send_alert(
+            "Judicial Yuan crawler: upcoming pipeline failed",
+            f"Could not establish a session (likely no internet): {exc}",
+        )
+        return
 
     total_found = total_new = total_updated = 0
 
