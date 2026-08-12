@@ -13,6 +13,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .. import config
+from ..retry import with_retry
 
 # Headers that mimic jQuery $.ajax() exactly
 _AJAX_HEADERS = {
@@ -45,15 +46,15 @@ class JudicialSession:
         then extract the _csrf and token fields the server embeds in V2.htm.
         """
         # 1. Frameset — sets the initial session cookies
-        self._session.get(config.FRAMESET_URL, timeout=config.REQUEST_TIMEOUT)
+        with_retry(self._session.get, config.FRAMESET_URL, timeout=config.REQUEST_TIMEOUT)
         time.sleep(0.3)
 
         # 2. V1 (search form) — CSRF token
-        r1 = self._session.get(config.FORM_URL, timeout=config.REQUEST_TIMEOUT)
+        r1 = with_retry(self._session.get, config.FORM_URL, timeout=config.REQUEST_TIMEOUT)
         r1.raise_for_status()
 
         # 3. V2 (results frame) — token + refreshed CSRF
-        r2 = self._session.get(config.RESULTS_URL, timeout=config.REQUEST_TIMEOUT)
+        r2 = with_retry(self._session.get, config.RESULTS_URL, timeout=config.REQUEST_TIMEOUT)
         r2.raise_for_status()
         soup2 = BeautifulSoup(r2.text, "html.parser")
 
@@ -77,7 +78,8 @@ class JudicialSession:
         payload["token"]  = self._token
         time.sleep(config.REQUEST_DELAY)
 
-        resp = self._session.post(
+        resp = with_retry(
+            self._session.post,
             config.SEARCH_URL,
             data=payload,
             headers={"Referer": config.RESULTS_URL},
@@ -95,7 +97,8 @@ class JudicialSession:
     def get_detail(self, para: str) -> dict:
         """Fetch per-auction detail JSON using the `para` field from the search result."""
         time.sleep(config.REQUEST_DELAY)
-        resp = self._session.get(
+        resp = with_retry(
+            self._session.get,
             config.DETAIL_URL,
             params={"para": para},
             headers={"Referer": config.RESULTS_URL},
@@ -112,6 +115,6 @@ class JudicialSession:
     def download_pdf(self, url: str) -> bytes:
         """Download a PDF and return raw bytes."""
         time.sleep(config.REQUEST_DELAY)
-        resp = self._session.get(url, timeout=config.REQUEST_TIMEOUT * 2)
+        resp = with_retry(self._session.get, url, timeout=config.REQUEST_TIMEOUT * 2)
         resp.raise_for_status()
         return resp.content
