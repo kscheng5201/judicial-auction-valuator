@@ -1,0 +1,7 @@
+# src/ingestion/judicial_yuan — Judicial Yuan auction crawler
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+pdfplumber>=0.10.3
+PyMySQL>=1.1.0
+python-dotenv>=1.0.0
+APScheduler>=3.10.4
