@@ -3,11 +3,33 @@ Database upsert helpers for auctions and auction_details.
 """
 import json
 import logging
+from datetime import date
 from typing import Dict, Any, Optional
 
 from ..db.connection import get_cursor
 
 logger = logging.getLogger(__name__)
+
+
+def get_last_success_finish(run_type: str) -> Optional[date]:
+    """
+    Date the given run_type ('upcoming' / 'historical') last completed
+    successfully, across all court/sale-type/prop-type combinations.
+    None if it has never succeeded (e.g. first run, or fresh database).
+
+    Used to widen the pipeline's default query window when the last
+    run failed or was skipped entirely, so the gap gets covered on the
+    next successful run rather than silently lost.
+    """
+    with get_cursor() as cur:
+        cur.execute(
+            "SELECT MAX(finished_at) AS last_success "
+            "FROM crawler_runs WHERE run_type=%s AND status='success'",
+            (run_type,),
+        )
+        row = cur.fetchone()
+        finished_at = row["last_success"] if row else None
+        return finished_at.date() if finished_at else None
 
 
 def _roc_to_iso(roc_date_str: Optional[str]) -> Optional[str]:

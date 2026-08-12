@@ -36,6 +36,25 @@ before or alongside the code that integrates it.
   site has been observed to vary this. `scripts/diagnose_judicial_yuan.py`
   is a standalone live probe for when the parser starts silently
   returning empty/partial records.
+- **Reliability on a desktop scheduler**: this crawler runs unattended
+  on a local machine, so the dominant failure mode is the machine not
+  being connected to the internet at the scheduled fire time, not a
+  site format change. Three layers handle this:
+  1. `retry.py` retries any network call with exponential backoff
+     (`JUDICIAL_YUAN_RETRY_MAX_ATTEMPTS`/`_RETRY_BASE_DELAY`) — absorbs
+     brief blips within a single run.
+  2. `pipeline/upcoming.py` / `pipeline/historical.py` track the last
+     *successful* run per pipeline (`crawler_runs`, via
+     `get_last_success_finish`) and widen the query window back to
+     that date if it's older than the default lookback — so a run
+     that failed outright, or never fired, gets its gap covered by
+     the next successful run instead of silently losing that window.
+  3. `scripts/schedule_judicial_yuan_crawler.py` sets a generous
+     `misfire_grace_time` (`JUDICIAL_YUAN_MISFIRE_GRACE_SECONDS`,
+     default 6h) with `coalesce=True`, so a job missed because the
+     machine was asleep still runs once it wakes, and failures that
+     still escape (e.g. the database itself being unreachable) trigger
+     `notify.send_alert` rather than failing invisibly.
 - **Licensing**: publicly published court auction announcements;
   no terms-of-use restriction identified as of this writing. Re-check
   before adding bulk/parallel fetching.

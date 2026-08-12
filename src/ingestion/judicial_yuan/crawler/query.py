@@ -2,7 +2,7 @@
 Builds POST payloads and paginates through QUERY.htm results.
 """
 from datetime import date, timedelta
-from typing import Iterator, List, Dict, Any
+from typing import Iterator, List, Dict, Any, Optional
 import logging
 
 from .. import config
@@ -136,11 +136,25 @@ def fetch_all_pages(
                 pass
 
 
-def upcoming_date_range() -> tuple:
+def upcoming_date_range(since: Optional[date] = None) -> tuple:
+    """
+    since: date of the last successful run of this pipeline, if any.
+    If the default window's start is later than `since` — i.e. the
+    pipeline failed or didn't run for longer than the window normally
+    covers — widen date_from back to `since` so nothing in that gap is
+    missed on this run.
+    """
     today = date.today()
-    return today, today + timedelta(days=config.UPCOMING_DAYS_AHEAD)
+    date_from = today
+    if since and since < date_from:
+        date_from = since
+    return date_from, today + timedelta(days=config.UPCOMING_DAYS_AHEAD)
 
 
-def historical_date_range() -> tuple:
+def historical_date_range(since: Optional[date] = None) -> tuple:
+    """See upcoming_date_range for what `since` does."""
     today = date.today()
-    return today - timedelta(days=config.HISTORICAL_DAYS_BACK), today
+    date_from = today - timedelta(days=config.HISTORICAL_DAYS_BACK)
+    if since and since < date_from:
+        date_from = since
+    return date_from, today

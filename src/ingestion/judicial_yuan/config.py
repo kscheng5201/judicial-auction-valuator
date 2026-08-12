@@ -19,6 +19,16 @@ PDF_DOWNLOAD_URL = f"{_BASE}/DO_VIEWPDF.htm" # GET ?filenm=<path> → applicatio
 REQUEST_DELAY    = float(os.getenv("JUDICIAL_YUAN_REQUEST_DELAY", "0.8"))
 REQUEST_TIMEOUT  = int(os.getenv("JUDICIAL_YUAN_REQUEST_TIMEOUT", "30"))
 
+# Retry/backoff for transient network failures (e.g. no internet at run time).
+# Delay before attempt N is RETRY_BASE_DELAY * 2^(N-1) seconds.
+RETRY_MAX_ATTEMPTS = int(os.getenv("JUDICIAL_YUAN_RETRY_MAX_ATTEMPTS", "4"))
+RETRY_BASE_DELAY   = float(os.getenv("JUDICIAL_YUAN_RETRY_BASE_DELAY", "5"))
+
+# Optional alert channel for pipeline failures — a generic webhook URL
+# (e.g. a Slack incoming webhook). Desktop notifications (macOS) are
+# always attempted regardless of this setting; see notify.py.
+ALERT_WEBHOOK_URL = os.getenv("JUDICIAL_YUAN_ALERT_WEBHOOK_URL", "")
+
 UPCOMING_DAYS_AHEAD  = int(os.getenv("JUDICIAL_YUAN_UPCOMING_DAYS_AHEAD", "90"))
 HISTORICAL_DAYS_BACK = int(os.getenv("JUDICIAL_YUAN_HISTORICAL_DAYS_BACK", "365"))
 
