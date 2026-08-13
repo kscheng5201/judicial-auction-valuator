@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Judicial Auction Valuator</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>法拍屋 Auctions</h1>
+  </header>
+
+  <section class="filters">
+    <select id="status">
+      <option value="upcoming" selected>Upcoming</option>
+      <option value="historical">Historical</option>
+      <option value="">All</option>
+    </select>
+    <select id="court_code">
+      <option value="">All courts</option>
+    </select>
+    <select id="prop_type">
+      <option value="">All types</option>
+      <option value="C51">C51 — Land</option>
+      <option value="C52">C52 — Building</option>
+      <option value="C103">C103 — Parking</option>
+      <option value="C54">C54 — Other</option>
+    </select>
+  </section>
+
+  <main id="list" class="list"></main>
+
+  <button id="load-more" class="load-more" hidden>Load more</button>
+
+  <div id="detail" class="detail-overlay" hidden>
+    <div class="detail-panel">
+      <button id="detail-close" class="detail-close" aria-label="Close">&times;</button>
+      <div id="detail-body" class="detail-body"></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
